@@ -1,9 +1,9 @@
 const express = require("express");
 const app = express();
+const routes = require("./../routes");
 
 app.use(express.json());
 
-app.get("/teste", (req, res) => {
-  res.status(200).send({ mensagem: "Hello API!" });
-});
+routes(app);
+
 module.exports = app;
