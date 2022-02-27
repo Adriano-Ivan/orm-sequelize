@@ -15,4 +15,6 @@ router
   .put(turmaController.atualizaTurma)
   .delete(turmaController.apagaTurma);
 
+router.route("/:id/restaurar").post(turmaController.restaurarTurma);
+
 module.exports = router;

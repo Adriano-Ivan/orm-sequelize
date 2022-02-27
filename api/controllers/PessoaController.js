@@ -1,15 +1,23 @@
 const database = require("./../models");
 
 class PessoaController {
-  static async obterTodasAsPessoas(req, res) {
+  static async obterPessoasAtivas(req, res) {
     try {
-      const todasAsPessoas = await database.Pessoas.findAll();
-      return res.status(200).json(todasAsPessoas);
+      const pessoasAtivas = await database.Pessoas.findAll();
+      return res.status(200).json(pessoasAtivas);
     } catch (erro) {
       res.status(500).json(erro.message);
     }
   }
 
+  static async obterTodasAsPessoas(req, res) {
+    try {
+      const todasAsPessoas = await database.Pessoas.scope("todos").findAll();
+      return res.status(200).json(todasAsPessoas);
+    } catch (erro) {
+      res.status(500).json(erro.message);
+    }
+  }
   static async obterUmaPessoa(req, res) {
     const { id } = req.params;
     try {
@@ -69,6 +77,15 @@ class PessoaController {
         .json({ mensagem: `registro de id ${id} deletado.` });
     } catch (erro) {
       res.status(500).json(erro.message);
+    }
+  }
+  static async restaurarPessoa(req, res) {
+    const { id } = req.params;
+    try {
+      await database.Pessoas.restore({ where: { id: Number(id) } });
+      res.status(200).json({ mensagem: `registro de id ${id} restaurado.` });
+    } catch (erro) {
+      return res.status(500).json(erro.message);
     }
   }
 
@@ -147,6 +164,18 @@ class PessoaController {
         .json({ mensagem: `registro de id ${matriculaId} deletado.` });
     } catch (erro) {
       res.status(500).json(erro.message);
+    }
+  }
+
+  static async restaurarMatricula(req, res) {
+    const { matriculaId, estudanteId } = req.params;
+    try {
+      await database.Matriculas.restore({
+        where: { id: Number(matriculaId), estudante_id: Number(estudanteId) },
+      });
+      res.status(200).json({ mensagem: `registro de id ${id} restaurado.` });
+    } catch (erro) {
+      return res.status(500).json(erro.message);
     }
   }
 }

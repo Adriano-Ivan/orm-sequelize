@@ -15,4 +15,6 @@ router
   .put(nivelController.atualizaNivel)
   .delete(nivelController.apagaNivel);
 
+router.route("/:id/restaurar").post(nivelController.restaurarNivel);
+
 module.exports = router;
