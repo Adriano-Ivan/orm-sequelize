@@ -1,10 +1,14 @@
-const database = require("./../models");
-const Sequelize = require("sequelize");
+// const database = require("./../models");
+// const Sequelize = require("sequelize");
+
+const { PessoasServices, MatriculasServices } = require("./../services");
+const pessoasServices = new PessoasServices();
+const matriculasServices = new MatriculasServices();
 
 class PessoaController {
   static async obterPessoasAtivas(req, res) {
     try {
-      const pessoasAtivas = await database.Pessoas.findAll();
+      const pessoasAtivas = await pessoasServices.obterRegistrosAtivos();
       return res.status(200).json(pessoasAtivas);
     } catch (erro) {
       res.status(500).json(erro.message);
@@ -13,7 +17,7 @@ class PessoaController {
 
   static async obterTodasAsPessoas(req, res) {
     try {
-      const todasAsPessoas = await database.Pessoas.scope("todos").findAll();
+      const todasAsPessoas = await pessoasServices.obterTodosOsRegistros();
       return res.status(200).json(todasAsPessoas);
     } catch (erro) {
       res.status(500).json(erro.message);
@@ -22,11 +26,7 @@ class PessoaController {
   static async obterUmaPessoa(req, res) {
     const { id } = req.params;
     try {
-      const umaPessoa = await database.Pessoas.findOne({
-        where: {
-          id: parseInt(id),
-        },
-      });
+      const umaPessoa = await pessoasServices.obterUmRegistro(id);
       return res.status(200).json(umaPessoa);
     } catch (erro) {
       return res.status(500).json(erro.message);
@@ -37,7 +37,7 @@ class PessoaController {
     const novaPessoa = req.body;
     try {
       console.log(novaPessoa);
-      const novaPessoaCriada = await database.Pessoas.create(novaPessoa);
+      const novaPessoaCriada = await pessoasServices.criarRegistro(novaPessoa);
       return res.status(200).json(novaPessoaCriada);
     } catch (erro) {
       return res.status(500).json(erro.message);
@@ -49,16 +49,8 @@ class PessoaController {
     const { id } = req.params;
 
     try {
-      await database.Pessoas.update(novasInfos, {
-        where: {
-          id: parseInt(id),
-        },
-      });
-      const pessoaAtualizada = await database.Pessoas.findOne({
-        where: {
-          id: parseInt(id),
-        },
-      });
+      await pessoasServices.atualizarRegistro(novasInfos, id);
+      const pessoaAtualizada = await pessoasServices.obterUmRegistro(id);
       return res.status(200).json(pessoaAtualizada);
     } catch (erro) {
       return res.status(500).json(erro.message);
@@ -68,11 +60,7 @@ class PessoaController {
   static async deletarPessoa(req, res) {
     const { id } = req.params;
     try {
-      await database.Pessoas.destroy({
-        where: {
-          id: parseInt(id),
-        },
-      });
+      await pessoasServices.apagarRegistro(id);
       return res
         .status(200)
         .json({ mensagem: `registro de id ${id} deletado.` });
@@ -83,7 +71,7 @@ class PessoaController {
   static async restaurarPessoa(req, res) {
     const { id } = req.params;
     try {
-      await database.Pessoas.restore({ where: { id: Number(id) } });
+      await pessoasServices.restaurarPessoa(id);
       res.status(200).json({ mensagem: `registro de id ${id} restaurado.` });
     } catch (erro) {
       return res.status(500).json(erro.message);
@@ -93,11 +81,7 @@ class PessoaController {
   static async obterTodasAsMatriculas(req, res) {
     const { estudanteId } = req.params;
     try {
-      const pessoa = await database.Pessoas.findOne({
-        where: {
-          id: Number(estudanteId),
-        },
-      });
+      const pessoa = await pessoasServices.obterUmRegistro(estudanteId);
       const matriculas = await pessoa.getAulasMatriculadas();
       return res.status(200).json(matriculas);
     } catch (erro) {
@@ -108,12 +92,10 @@ class PessoaController {
   static async obterUmaMatricula(req, res) {
     const { estudanteId, matriculaId } = req.params;
     try {
-      const umaMatricula = await database.Matriculas.findOne({
-        where: {
-          id: parseInt(matriculaId),
-          estudante_id: Number(estudanteId),
-        },
-      });
+      const umaMatricula = await matriculasServices.obterUmaMatricula(
+        matriculaId,
+        estudanteId
+      );
       return res.status(200).json(umaMatricula);
     } catch (erro) {
       return res.status(500).json(erro.message);
@@ -124,7 +106,7 @@ class PessoaController {
     const { estudanteId } = req.params;
     const novaMatricula = { ...req.body, estudante_id: Number(estudanteId) };
     try {
-      const novaMatriculaCriada = await database.Matriculas.create(
+      const novaMatriculaCriada = await matriculasServices.criarRegistro(
         novaMatricula
       );
       return res.status(200).json(novaMatriculaCriada);
@@ -137,17 +119,16 @@ class PessoaController {
     const novasInfos = req.body;
 
     try {
-      await database.Matriculas.update(novasInfos, {
-        where: {
-          id: parseInt(matriculaId),
-          estudante_id: Number(estudanteId),
-        },
-      });
-      const MatriculaAtualizada = await database.Matriculas.findOne({
-        where: {
-          id: parseInt(matriculaId),
-        },
-      });
+      await matriculasServices.atualizarMatricula(
+        matriculaId,
+        estudanteId,
+        novasInfos
+      );
+
+      const MatriculaAtualizada = await matriculasServices.obterUmaMatricula(
+        matriculaId,
+        estudanteId
+      );
       return res.status(200).json(MatriculaAtualizada);
     } catch (erro) {
       return res.status(500).json(erro.message);
@@ -156,11 +137,7 @@ class PessoaController {
   static async deletarMatricula(req, res) {
     const { estudanteId, matriculaId } = req.params;
     try {
-      await database.Matriculas.destroy({
-        where: {
-          id: parseInt(matriculaId),
-        },
-      });
+      await matriculasServices.apagarRegistro(matriculaId);
       return res
         .status(200)
         .json({ mensagem: `registro de id ${matriculaId} deletado.` });
@@ -172,9 +149,7 @@ class PessoaController {
   static async restaurarMatricula(req, res) {
     const { matriculaId, estudanteId } = req.params;
     try {
-      await database.Matriculas.restore({
-        where: { id: Number(matriculaId), estudante_id: Number(estudanteId) },
-      });
+      await matriculasServices.restaurarMatricula(matriculaId, estudanteId);
       res.status(200).json({ mensagem: `registro de id ${id} restaurado.` });
     } catch (erro) {
       return res.status(500).json(erro.message);
@@ -184,14 +159,8 @@ class PessoaController {
   static async obterMatriculasPorTurma(req, res) {
     const { turmaId } = req.params;
     try {
-      const todasAsMatriculas = await database.Matriculas.findAndCountAll({
-        where: {
-          turma_id: Number(turmaId),
-          status: "confirmado",
-        },
-        limit: 20,
-        order: [["estudante_id", "DESC"]],
-      });
+      const todasAsMatriculas =
+        await matriculasServices.obterMatriculasPorTurma(turmaId);
 
       return res.status(200).json(todasAsMatriculas);
     } catch (erro) {
@@ -202,15 +171,23 @@ class PessoaController {
   static async obterTurmasLotadas(req, res) {
     const lotacaoTurma = 2;
     try {
-      const turmasLotadas = await database.Matriculas.findAndCountAll({
-        where: {
-          status: "confirmado",
-        },
-        attributes: ["turma_id"],
-        group: ["turma_id"],
-        having: Sequelize.literal(`count(turma_id) >= ${lotacaoTurma}`),
-      });
+      const turmasLotadas = await matriculasServices.obterTurmasLotadas(
+        lotacaoTurma
+      );
       return res.status(200).json(turmasLotadas);
+    } catch (erro) {
+      return res.status(500).json(erro.message);
+    }
+  }
+
+  static async cancelarPessoa(req, res) {
+    const { estudanteId } = req.params;
+
+    try {
+      await pessoasServices.cancelaPessoaEmatriculas(Number(estudanteId));
+      res.status(200).json({
+        message: `matrículas ref. a estudante ${estudanteId} canceladas`,
+      });
     } catch (erro) {
       return res.status(500).json(erro.message);
     }

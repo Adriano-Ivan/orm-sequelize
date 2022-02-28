@@ -4,11 +4,11 @@ const PessoaController = require("./../controllers/PessoaController");
 
 const router = Router();
 
-router.get("/todas", PessoaController.obterTodasAsPessoas);
+router.get("/ativas", PessoaController.obterPessoasAtivas);
 
 router
   .route("/")
-  .get(PessoaController.obterPessoasAtivas)
+  .get(PessoaController.obterTodasAsPessoas)
   .post(PessoaController.criaPessoa);
 
 router
@@ -39,5 +39,7 @@ router.route("/matriculas/lotadas").get(PessoaController.obterTurmasLotadas);
 router
   .route("/:estudanteId/matriculas/:matriculaId/restaurar")
   .post(PessoaController.restaurarMatricula);
+
+router.route("/:estudanteId/cancelar").post(PessoaController.cancelarPessoa);
 
 module.exports = router;
