@@ -31,6 +31,12 @@ router
 router.route("/:id/restaurar").post(PessoaController.restaurarPessoa);
 
 router
+  .route("/matriculas/:turmaId/confirmadas")
+  .get(PessoaController.obterMatriculasPorTurma);
+
+router.route("/matriculas/lotadas").get(PessoaController.obterTurmasLotadas);
+
+router
   .route("/:estudanteId/matriculas/:matriculaId/restaurar")
   .post(PessoaController.restaurarMatricula);
 
