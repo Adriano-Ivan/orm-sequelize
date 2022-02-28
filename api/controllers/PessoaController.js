@@ -92,11 +92,12 @@ class PessoaController {
   static async obterTodasAsMatriculas(req, res) {
     const { estudanteId } = req.params;
     try {
-      const matriculas = await database.Matriculas.findAll({
+      const pessoa = await database.Pessoas.findOne({
         where: {
-          estudante_id: Number(estudanteId),
+          id: Number(estudanteId),
         },
       });
+      const matriculas = await pessoa.getAulasMatriculadas();
       return res.status(200).json(matriculas);
     } catch (erro) {
       return res.status(500).json(erro.message);
